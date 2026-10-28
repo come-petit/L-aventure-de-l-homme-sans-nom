@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>La Lame d’Aurore</title>
+<style>
+:root{--bg:#f3ead7;--card:#fffaf0;--ink:#2b2118;--mut:#7a6a55;--acc:#9c3b1c;--bd:#d8c7a6;--btn:#efe2c4;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16110d;--card:#221a13;--ink:#eadfc8;--mut:#a89674;--acc:#e0883e;--bd:#4a3a28;--btn:#2e231a}}
+:root[data-theme="dark"]{--bg:#16110d;--card:#221a13;--ink:#eadfc8;--mut:#a89674;--acc:#e0883e;--bd:#4a3a28;--btn:#2e231a}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Georgia,'Times New Roman',serif}
+main{max-width:640px;margin:0 auto;padding:16px}
+h1{font-size:1.1rem;letter-spacing:.15em;text-transform:uppercase;color:var(--acc);margin:4px 0 12px;text-align:center}
+.hud{display:flex;justify-content:space-between;font-size:.9rem;color:var(--mut);margin-bottom:8px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;overflow:hidden}
+svg{display:block;width:100%;height:auto}
+.txt{padding:16px 18px 6px}
+.txt h2{margin:0 0 8px;font-size:1.25rem}
+.txt p{margin:0;line-height:1.55}
+.ch{padding:10px 18px 18px;display:flex;flex-direction:column;gap:8px}
+button{font:inherit;color:var(--ink);background:var(--btn);border:1px solid var(--bd);border-radius:8px;padding:11px 14px;text-align:left;cursor:pointer}
+button:hover{border-color:var(--acc)}
+button[disabled]{opacity:.4;cursor:not-allowed}
+.hint{font-size:.8rem;color:var(--mut)}
+.sheet{background:var(--card);border:1px solid var(--bd);border-radius:12px;margin-bottom:12px}
+.sheet summary{cursor:pointer;padding:12px 16px;font-weight:bold;display:flex;justify-content:space-between;gap:8px}
+.sheet summary span{font-weight:normal;color:var(--mut);font-size:.9rem}
+.sb{padding:4px 16px 16px;display:flex;flex-direction:column;gap:12px;border-top:1px solid var(--bd)}
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:8px}
+.row b{min-width:64px}
+input,select,textarea{font:inherit;color:var(--ink);background:var(--bg);border:1px solid var(--bd);border-radius:8px;padding:7px 9px;min-width:0}
+input[type=text]{flex:1}
+textarea{width:100%;box-sizing:border-box;min-height:70px;resize:vertical}
+.sb button{padding:5px 12px;text-align:center}
+.bar{height:8px;background:var(--bd);border-radius:4px;overflow:hidden;flex:1;min-width:80px}
+.bar i{display:block;height:100%;background:var(--acc)}
+.val{min-width:28px;text-align:center}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{background:var(--btn);border:1px solid var(--bd);border-radius:999px;padding:3px 6px 3px 12px;font-size:.9rem}
+.chip button{border:0;background:none;padding:0 4px;color:var(--acc)}
+.lbl{font-size:.8rem;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-top:4px}
+</style>
+</head>
+<body>
+<main>
+<h1>La Lame d’Aurore</h1>
+<details class="sheet"><summary>📜 Fiche de personnage <span id="mini"></span></summary><div class="sb">
+<div class="row"><input type="text" id="nm" placeholder="Nom du héros" maxlength="24"></div>
+<div class="row"><b>❤ PV</b><button id="hm">−</button><span class="val" id="hpv"></span><button id="hpp">+</button><div class="bar"><i id="hb"></i></div></div>
+<div class="row"><b>🪙 Or</b><button id="gm">−</button><span class="val" id="gv"></span><button id="gp">+</button></div>
+<div class="row"><b>🏹 Dextérité</b><button id="dm">−</button><span class="val" id="dv"></span><button id="dp">+</button></div>
+<div><div class="lbl">✨ Talent</div><div class="row"><select id="tal"><option value="">— Aucun talent —</option><option>Lancer de dagues</option><option>Vision nocturne</option><option>Pistage</option><option>Charisme</option><option>Guérison</option></select></div></div>
+<div><div class="lbl">🎒 Inventaire</div><div class="chips" id="chips"></div><div class="row"><input type="text" id="ni" placeholder="Ajouter un objet…" maxlength="30"><button id="na">Ajouter</button></div></div>
+<div><div class="lbl">📝 Notes</div><textarea id="notes" placeholder="Indices, noms, choix à retenir…"></textarea></div>
+<div class="hint">Tout est sauvegardé automatiquement dans ce navigateur, même si tu fermes la page.</div>
+</div></details>
+<div class="card"><div id="art"></div><div class="txt"><h2 id="t"></h2><p id="p"></p></div><div class="ch" id="c"></div></div>
+</main>
+<script>
+const SKY={village:['#f6b26b','#fbe5b0'],tavern:['#3a2615','#7a4a22'],forest:['#2d5a3a','#8fbf8a'],cave:['#15121c','#3a3350'],ruins:['#5b6b8c','#c9d1e0'],dragon:['#5a1a12','#e0883e'],win:['#f2c14e','#fff3c4'],dead:['#1a0f14','#4a1a24']};
+const SC={
+village:'<path d="M0 150Q100 120 200 145T400 140V200H0Z" fill="#5c7a3a"/><rect x="60" y="115" width="50" height="40" fill="#8a5a33"/><path d="M52 117L85 90 118 117Z" fill="#a03a22"/><rect x="250" y="105" width="60" height="50" fill="#9a6a3d"/><path d="M242 107L280 75 318 107Z" fill="#b24a2a"/><circle cx="330" cy="40" r="22" fill="#fff3c4"/>',
+tavern:'<rect y="140" width="400" height="60" fill="#4a2c16"/><rect x="40" y="40" width="70" height="80" rx="4" fill="#f2c14e" opacity=".8"/><circle cx="270" cy="90" r="26" fill="#d8c7a6"/><path d="M240 170L270 100 300 170Z" fill="#4b3a7a"/><path d="M262 70L270 40 278 70Z" fill="#4b3a7a"/><circle cx="270" cy="90" r="4" fill="#fff"/>',
+forest:'<rect y="150" width="400" height="50" fill="#244a2e"/><g fill="#1a3a22"><path d="M30 160L60 60 90 160Z"/><path d="M110 165L150 40 190 165Z"/><path d="M230 160L265 70 300 160Z"/><path d="M320 165L355 50 390 165Z"/></g><circle cx="200" cy="150" r="5" fill="#f2c14e"/><circle cx="215" cy="148" r="5" fill="#f2c14e"/>',
+cave:'<path d="M0 200V60Q60 20 120 70Q200 0 280 70Q340 20 400 60V200Z" fill="#0a0810"/><path d="M130 200Q200 90 270 200Z" fill="#3a3350"/><circle cx="170" cy="140" r="5" fill="#e0883e"/><circle cx="230" cy="140" r="5" fill="#e0883e"/>',
+ruins:'<rect y="160" width="400" height="40" fill="#6b7a5a"/><g fill="#8a93a6"><rect x="60" y="80" width="30" height="80"/><rect x="140" y="110" width="30" height="50"/><rect x="230" y="70" width="30" height="90"/><rect x="50" y="70" width="50" height="12"/><rect x="220" y="60" width="50" height="12"/></g><path d="M310 160V100L340 80 370 100V160Z" fill="#b9b2a0"/>',
+dragon:'<path d="M0 170Q200 120 400 170V200H0Z" fill="#2a1410"/><path d="M110 150Q130 70 210 80Q260 40 300 70L330 60 310 90Q330 130 290 150Z" fill="#8c2a1c"/><path d="M210 80Q180 20 130 30Q170 50 180 90Z" fill="#6a1e14"/><circle cx="300" cy="72" r="4" fill="#ffd36b"/><path d="M330 62L370 45 345 75Z" fill="#e0883e"/>',
+win:'<rect y="150" width="400" height="50" fill="#7aa04a"/><path d="M200 30L212 120 200 135 188 120Z" fill="#e6f0ff"/><rect x="180" y="130" width="40" height="8" fill="#a03a22"/><rect x="196" y="138" width="8" height="25" fill="#6a3a1a"/><g stroke="#fff" stroke-width="3"><path d="M200 10V0M150 40L135 30M250 40L265 30"/></g>',
+dead:'<rect y="160" width="400" height="40" fill="#1a0f14"/><circle cx="200" cy="100" r="40" fill="#d8d2c4"/><rect x="175" y="130" width="50" height="22" fill="#d8d2c4"/><circle cx="185" cy="98" r="9" fill="#1a0f14"/><circle cx="215" cy="98" r="9" fill="#1a0f14"/><path d="M196 118h8l-4-10z" fill="#1a0f14"/>'
+};
+const S={
+intro:{a:'village',t:'Un don à Valbrume',x:'Avant de prendre la route, la vieille guérisseuse de Valbrume te prend la main. « Tout héros naît avec un don. Quel est le tien ? » Ce talent figurera sur ta fiche, et tu pourras le changer à tout moment.',c:[{l:'Lancer de dagues',g:'start',tal:'Lancer de dagues'},{l:'Vision nocturne',g:'start',tal:'Vision nocturne'},{l:'Pistage',g:'start',tal:'Pistage'},{l:'Charisme',g:'start',tal:'Charisme'},{l:'Guérison',g:'start',tal:'Guérison'}]},
+start:{a:'village',t:'L’aube sur Valbrume',x:'Le village dort encore quand le glas sonne : le dragon Ashgar s’est réveillé dans la montagne. Les anciens murmurent qu’une épée légendaire, la Lame d’Aurore, repose dans les ruines au-delà de la forêt. Tu es le seul à avoir encore le courage de partir.',c:[{l:'Passer à la taverne avant de partir',g:'tavern'},{l:'Filer directement vers la forêt',g:'forest'}]},
+tavern:{a:'tavern',t:'La taverne du Corbeau',x:'Un vieux mage encapuchonné t’observe. « Prends ceci, jeune héros », dit-il en te glissant une amulette tiède. « Elle te protégera du feu, une fois. » Il disparaît dans la fumée.',c:[{l:'Prendre l’amulette et partir',g:'forest',it:'Amulette ignifugée'}]},
+forest:{a:'forest',t:'La forêt des murmures',x:'Des yeux jaunes brillent entre les troncs. Un loup affamé te barre la route, puis le sentier se sépare : à gauche, des ruines baignées de lune ; à droite, un gouffre fumant.',c:[{l:'Affronter le loup',g:'forest2',pv:-2},{l:'Gravir un arbre pour le contourner',g:'forest2'}]},
+forest2:{a:'forest',t:'Le carrefour',x:'Le loup a fui. Deux chemins s’offrent à toi.',c:[{l:'Aller vers les ruines',g:'ruins'},{l:'Descendre vers le gouffre fumant',g:'cave'}]},
+ruins:{a:'ruins',t:'Les ruines d’Eldoran',x:'Au centre d’un cercle de pierres, une épée est plantée dans un autel. Des runes s’éveillent à ton approche. Une voix demande : « Que veux-tu protéger ? »',c:[{l:'« Mon village. »',g:'sword',it:'Lame d’Aurore'},{l:'« Ma gloire. »',g:'curse',pv:-3}]},
+curse:{a:'ruins',t:'Le prix de l’orgueil',x:'Les runes s’embrasent et te repoussent. Tu te relèves, meurtri, mais l’autel te laisse une seconde chance. Ton cœur change de réponse.',c:[{l:'« Mon village. »',g:'sword',it:'Lame d’Aurore'}]},
+sword:{a:'win',t:'La Lame d’Aurore',x:'L’épée s’illumine entre tes mains. Tu sens sa chaleur couler dans tes bras. Le gouffre fumant est à présent la seule voie vers Ashgar.',c:[{l:'Descendre dans le gouffre',g:'cave'}]},
+cave:{a:'cave',t:'Le gouffre d’Ashgar',x:'La chaleur est suffocante. Au fond, une immense silhouette respire lentement, couchée sur un lit d’or.',c:[{l:'Combattre le dragon avec la Lame d’Aurore',g:'dragon',need:'Lame d’Aurore',alt:'dead'},{l:'Attaquer à mains nues',g:'dead'},{l:'Remonter en silence vers les ruines',g:'ruins'}]},
+dragon:{a:'dragon',t:'Le souffle d’Ashgar',x:'Le dragon se dresse et crache un torrent de flammes. L’amulette chauffe à blanc sur ta poitrine…',c:[{l:'Lever la Lame et charger',g:'victory',need:'Amulette ignifugée',alt:'dead'}]},
+victory:{a:'win',t:'Victoire !',x:'La lame frappe juste. Ashgar s’effondre dans un grondement et les cloches de Valbrume sonnent la fin de la nuit. On chantera ton nom pendant mille ans.',end:1,c:[]},
+dead:{a:'dead',t:'Ta quête s’achève ici',x:'Les ténèbres t’engloutissent. Mais les héros, dans les légendes, ont toujours le droit de recommencer.',end:1,c:[]}
+};
+const $=i=>document.getElementById(i);
+const KEY='lame_aurore_run';
+const fresh=()=>({name:'',hp:6,max:10,gold:10,dex:3,talent:'',inv:[],notes:'',scene:'intro'});
+function load(){try{const r=JSON.parse(localStorage.getItem(KEY));return r&&Array.isArray(r.inv)?Object.assign(fresh(),r):null}catch(e){return null}}
+function save(){try{localStorage.setItem(KEY,JSON.stringify(st))}catch(e){}}
+let st;
+function mini(){$('mini').textContent=(st.name||'Héros')+' · ❤ '+st.hp+' · 🪙 '+st.gold}
+function chips(){const c=$('chips');c.innerHTML='';if(!st.inv.length)c.innerHTML='<span class="hint">vide</span>';st.inv.forEach((n,i)=>{const d=document.createElement('span');d.className='chip';d.textContent=n;const x=document.createElement('button');x.textContent='×';x.setAttribute('aria-label','Retirer '+n);x.onclick=()=>{st.inv.splice(i,1);save();chips()};d.appendChild(x);c.appendChild(d)})}
+function vals(){$('dv').textContent=st.dex;$('hpv').textContent=st.hp;$('gv').textContent=st.gold;$('hb').style.width=Math.max(0,Math.min(100,st.hp/st.max*100))+'%';mini()}
+function sheet(){
+ $('nm').value=st.name;const tl=$('tal');if(st.talent&&![...tl.options].some(o=>o.value===st.talent))tl.add(new Option(st.talent,st.talent));tl.value=st.talent;$('notes').value=st.notes;
+ const bx=document.createElement('div');
+ [].forEach(k=>{const r=document.createElement('div');r.className='row';r.innerHTML='<b>'+k+'</b><button>−</button><span class="val">'+st.s[k]+'</span><button>+</button>';const[m,,p]=r.querySelectorAll('button,span');const v=r.querySelector('.val');m.onclick=()=>{st.s[k]=Math.max(0,st.s[k]-1);v.textContent=st.s[k];save()};p.onclick=()=>{st.s[k]=Math.min(20,st.s[k]+1);v.textContent=st.s[k];save()};bx.appendChild(r)});
+ chips();vals();
+}
+$('nm').oninput=e=>{st.name=e.target.value;save();mini()};
+
+$('notes').oninput=e=>{st.notes=e.target.value;save()};
+$('hm').onclick=()=>{st.hp=Math.max(0,st.hp-1);save();vals()};
+$('hpp').onclick=()=>{st.hp=Math.min(99,st.hp+1);save();vals()};
+$('gm').onclick=()=>{st.gold=Math.max(0,st.gold-1);save();vals()};
+$('gp').onclick=()=>{st.gold=Math.min(999,st.gold+1);save();vals()};
+function addItem(){const v=$('ni').value.trim();if(v&&!st.inv.includes(v)){st.inv.push(v);save();chips()}$('ni').value=''}
+$('tal').onchange=e=>{st.talent=e.target.value;save()};
+$('dm').onclick=()=>{st.dex=Math.max(0,st.dex-1);save();vals()};
+$('dp').onclick=()=>{st.dex=Math.min(20,st.dex+1);save();vals()};
+$('na').onclick=addItem;$('ni').onkeydown=e=>{if(e.key==='Enter')addItem()};
+function art(k){const s=SKY[k]||SKY.village;return `<svg viewBox="0 0 400 200" role="img" aria-label="Illustration"><defs><linearGradient id="g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${s[0]}"/><stop offset="1" stop-color="${s[1]}"/></linearGradient></defs><rect width="400" height="200" fill="url(#g)"/>${SC[k]}</svg>`}
+function go(id){
+ if(st.hp<=0)id='dead';
+ const s=S[id];
+ $('art').innerHTML=art(s.a);$('t').textContent=s.t;$('p').textContent=s.x;
+ st.scene=id;save();sheet();
+ 
+ const c=$('c');c.innerHTML='';
+ s.c.forEach(o=>{
+  const b=document.createElement('button');b.textContent=o.l;
+  b.onclick=()=>{
+   if(o.pv)st.hp+=o.pv;
+   if(o.tal)st.talent=o.tal;
+   if(o.it&&!st.inv.includes(o.it))st.inv.push(o.it);
+   let dest=o.g;
+   if(o.need&&!st.inv.includes(o.need))dest=o.alt||'dead';
+   go(dest);
+  };
+  c.appendChild(b);
+ });
+ if(s.end){const b=document.createElement('button');b.textContent='↺ Recommencer l’aventure';b.onclick=()=>{const keep=st.name;st=fresh();st.name=keep;go('intro')};c.appendChild(b)}
+}
+st=load()||fresh();go(S[st.scene]?st.scene:'start');
+</script>
+</body>
+</html>
